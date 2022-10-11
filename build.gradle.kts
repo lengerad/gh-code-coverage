@@ -1,15 +1,22 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+application {
+	// defines the main class for the application
+	mainClass.set("pb/ghcodecoverage.GhCodeCoverageApplicationKt")
+	version = "1.0-SNAPSHOT"
+}
+
 plugins {
 	id("org.springframework.boot") version "2.7.4"
 	id("io.spring.dependency-management") version "1.0.14.RELEASE"
 	kotlin("jvm") version "1.6.21"
 	kotlin("plugin.spring") version "1.6.21"
 	kotlin("plugin.jpa") version "1.6.21"
+	application
 }
 
 group = "pb"
-version = "0.0.1-SNAPSHOT"
+version = "1.0-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_11
 
 repositories {
