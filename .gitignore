@@ -10,3 +10,6 @@ builds
 
 # MacOS related files
 .DS_Store
+
+# database log
+data/codecoverage.trace.db
