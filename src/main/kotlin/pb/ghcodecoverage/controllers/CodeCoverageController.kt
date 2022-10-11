@@ -1,5 +1,7 @@
 package pb.ghcodecoverage.controllers
 
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.sql.Date
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -41,8 +43,13 @@ class CodeCoverageController(
         // first group records by the language -> that creates Map<String, ArrayList<RepositoryLanguage>> where key is language and value is list of all of its representations with size
         val grouped = repositories.groupBy { repository -> repository.language }
         // then we want to sum values per language and count its representation according to the total of all repositories and languages
+        val totalSizeDecimal = BigDecimal.valueOf(totalSize)
         return grouped.map { languageGroup -> languageGroup.key to languageGroup.value.sumOf { it.bytes } }
             // once summed we need to count the percentage according to the total size
-            .associate { it.first to (it.second.toFloat()/totalSize.toFloat() * 100f) }
+            .associate {
+                val bytes = BigDecimal.valueOf(it.second)
+                // I wasn't sure how much I should care about precision, so I decided to round the values up (as some representations are like 0,0001) but can be adjusted or simply return whole float value
+                it.first to bytes.divide(totalSizeDecimal, 3, RoundingMode.UP).toFloat() * 100f
+            }
     }
 }
