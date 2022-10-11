@@ -33,6 +33,7 @@ class GitHubClient(
     fun getRepositories(): List<GitHubRepositoryResponse> {
         log.info("Retrieving repositories for owner: $OWNER.")
         val allRepositories = mutableListOf<GitHubRepositoryResponse>()
+        // GH pagination starts from 1
         var page = 1
         // here for PB I could simply set limit to 100, but I want to point out that I was aware of pagination, so I added this simple page-fetching with lower limit
         do {
@@ -40,7 +41,7 @@ class GitHubClient(
 //            val call = client.newCall(Request.Builder().url("$GITHUB_API_BASE/orgs/$OWNER/repos?page=$page&per_pages=$REPOSITORIES_PAGE_SIZE").header("Authorization", "Bearer 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").build())
             val call = client.newCall(Request.Builder().url("$GITHUB_API_BASE/orgs/$OWNER/repos?page=$page&per_pages=$REPOSITORIES_PAGE_SIZE").header("Authorization", "Bearer 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").build())
             val response = call.execute()
-            //TODO: example of possible error handling - ideally I would encapsulate call handling to separate method for all client requests
+            // example of possible error handling - ideally I would encapsulate call handling to separate method for all client requests
             // right now we interrupt the whole process in case any request fails - that could be adjusted by the needs of the API consumer to possibly store what was fetched so far
             when {
                 !response.isSuccessful -> throw IllegalStateException("Unable to retrieve repositories for $OWNER due to ${response.code}: ${response.message}.")

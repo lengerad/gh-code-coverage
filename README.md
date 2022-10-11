@@ -9,11 +9,11 @@ Services should basically
  - provide response in following format:
    - ```{ "Ruby": 0.5, "TypeScript": 0.2, "Python": 0.3 }```
 
-
 ## How to run the application
 - you can either import it into IDE and run main from `GhCodeCoverageApplicaiton.kt` or use gradle and build app - `gradle clean build run`
 - app runs on default port `8080` and on localhost
 - I attached database files into GIT, so you can test app even with data from past days (not sure if needed) -> but for a clean run feel free to remove `/data` folder in the root so obtain clean database
+- I decide to round percentage coverage UP so it gives more relevant numbers (IMHO) but it might be possible adjusted according to the needs of precision
 - available endpoints:
     - `fetchCodeCoverage?date=YYYY-MM-DD`
     - example of GET call:
@@ -31,4 +31,5 @@ Services should basically
 7) I was using `sql.Date` all over the app which isn't ideal but since the task was specified as `day oriented` I stick with that for the sake of simplicity, otherwise I would use pbbly Instant or something timezoned.
 8) Since the response was specified as `Map<String, String>` I wasn't able to tie API response with some nicer data class that might have more detailed and adjustable answer.
 9) I didn't style error pages or created separated `@ControllerAdvice` -> instead I use `ResponseStatusException` but ideally errors/exceptions should have some default structure and shared handling
-10) I didn't rounded the decimal as some languages are having really small amount of representation and it would show them as `0.0` if single decimal was used like in example (sometiems even three decimals), but could be easily adjusted, hopefully it's fine like that 
+10) I rounded the decimals up as some languages are having small amount of representation - hopefully it's fine like that even tho we're loosing some precision but I didn't find any related info about rounding in the assignment.
+11) Tests might be the weaker part of this service but for such a small app I wasn't sure what else to test to not just "make tests for tests", but I rather mention it here as I'm aware of it.
