@@ -31,14 +31,10 @@ class H2Repository(
      * Persist all languages for all repositories in project with current timestamp to be able to track history + sums bytes and return total
      */
     @Transactional
-    fun storeRepositories(languagesByRepository: Map<String, Map<String, Long>>, currentDay: Date): Long {
+    fun storeRepositories(languagesByRepository: List<RepositoryLanguage>): Long {
         var totalBytes: Long = 0
-        // bit dirty solution -> actually might be mapped onto some DTOs for better readability
-        languagesByRepository.forEach { (repositoryName, repositoryLanguages) ->
-            repositoryLanguages.forEach { (language, bytes) ->
-                totalBytes += bytes
-                em.merge(RepositoryLanguage(null, currentDay, repositoryName, language, bytes))
-            }
+        languagesByRepository.forEach { repository -> totalBytes += repository.bytes
+                em.merge(repository)
         }
         return totalBytes
     }

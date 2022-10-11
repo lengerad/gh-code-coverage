@@ -35,6 +35,7 @@ dependencies {
 		exclude(module = "mockito-core")
 	}
 	testImplementation("com.ninja-squad:springmockk:3.1.1")
+	testImplementation("org.assertj:assertj-core:3.23.1")
 }
 
 tasks.withType<KotlinCompile> {

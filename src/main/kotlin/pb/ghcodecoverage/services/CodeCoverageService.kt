@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service
 import pb.ghcodecoverage.clients.GitHubClient
 import pb.ghcodecoverage.model.RepositoriesSummary
 import pb.ghcodecoverage.model.database.LastUpdate
+import pb.ghcodecoverage.model.database.RepositoryLanguage
 import pb.ghcodecoverage.repositories.H2Repository
 
 /**
@@ -52,10 +53,12 @@ class CodeCoverageService(
             log.warn("No repositories found.")
         }
         log.info("Found #${repositories.size} repositories.")
-        val repositoriesWithLanguage = repositories.associate {
-            it.name to gitHubClient.getRepositoryLanguages(it.name)
-        }
-        val totalBytes = h2Repository.storeRepositories(repositoriesWithLanguage, currentDay)
+        val repositoriesWithLanguage = repositories.map { gitHubRepository ->
+            gitHubClient.getRepositoryLanguages(gitHubRepository.name).map { (language, bytes) ->
+                RepositoryLanguage(null, currentDay, gitHubRepository.name, language, bytes)
+            }
+        }.flatten()
+        val totalBytes = h2Repository.storeRepositories(repositoriesWithLanguage)
         val response = h2Repository.storeTodaySummary(currentDay, totalBytes)
         log.info("Data retrieved with total size ${response.totalBytes} by the ${response.lastPull}.")
         return response
