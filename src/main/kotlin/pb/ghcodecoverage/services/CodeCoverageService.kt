@@ -10,6 +10,14 @@ import pb.ghcodecoverage.model.RepositoriesSummary
 import pb.ghcodecoverage.model.database.LastUpdate
 import pb.ghcodecoverage.repositories.H2Repository
 
+/**
+ * Service that handles communication with GitHub and H2 database
+ * It also provides [retrieveGitHubDataDaily] job that fetches the data daily according to cron specification.
+ * Service
+ * - stores new data related to code coverage
+ * - retrieve timestamp about data storage
+ * - provides data about code coverage per repository
+ */
 @Service
 class CodeCoverageService(
     val gitHubClient: GitHubClient,
@@ -21,17 +29,17 @@ class CodeCoverageService(
      * Periodically runs every day five minutes after midnight, checks whether timestamp doest not exist
      */
     @Scheduled(cron = "0 5 0 * * *")
-    fun retrieveGitHubDataDaily() {
+    private fun retrieveGitHubDataDaily() {
         log.info("Running daily cronjob to retrieve data from GitHub repositories.")
         val currentDay = Date.valueOf(LocalDate.now())
         // possibly someone one might endpoint before scheduler -> in that case we wan't to simply skip scheduled task as data are already stored
         val updated = h2Repository.getUpdateByDay(currentDay)
         if (updated != null) {
-            log.info("Data were already retrieved today ${updated.lastPull}, no need of running cronjob.")
+            log.info("Data were already retrieved today ${updated.lastPull}, no need of pulling data anymore..")
             return
         }
-        storeTodayCodeCoverage()
-        log.info("Running daily cronjob to retrieve data from GitHub repositories.")
+        val response = storeTodayCodeCoverage()
+        log.info("Data about language code coverage retrieved and stored by the date${response.lastPull } and total size: ${response.totalBytes} bytes.")
     }
 
     /**
@@ -55,10 +63,10 @@ class CodeCoverageService(
 
     /**
      * Method retrieves code coverage by the date specified - if the date is today and data are missing -> we fetch them and serve right away,
-     * otherwise we're not able to pull the data retrospectively - [IllegalStateException] is thrown.
-     * Returns [RepositoriesSummary] that contains total sum of bytes for whole project and language and their size for all repositories.
+     * otherwise we're not able to pull the data retrospectively - [IllegalArgumentException] is thrown.
+     * Returns [RepositoriesSummary] that contains total sum of bytes for whole project and language representations and their size for all repositories.
      */
-    @Throws(IllegalStateException::class)
+    @Throws(IllegalStateException::class, IllegalArgumentException::class)
     fun retrieveCodeCoverage(date: Date): RepositoriesSummary {
         var updated = h2Repository.getUpdateByDay(date)
         // if there is no timestamp stored -> we need to fetch new data
@@ -66,7 +74,7 @@ class CodeCoverageService(
             log.info("No timestamp found for date $date specified.")
             val currentDay = Date.valueOf(LocalDate.now())
             // if the day is today -> we're able to fetch it, otherwise it's not possible to fetch it retrospectively
-            if (date != currentDay) throw IllegalStateException("No language coverage data for date $date specified.")
+            if (date != currentDay) throw IllegalArgumentException("No language coverage data for date $date specified.")
             updated = storeTodayCodeCoverage()
             log.info("Fetched new data for today date $date.")
         } else log.info("Found existing timestamp for the $date -> fetching repositories data from the database.")

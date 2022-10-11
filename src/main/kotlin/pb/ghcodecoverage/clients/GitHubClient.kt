@@ -6,7 +6,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
-import pb.ghcodecoverage.model.RepositoryResponse
+import pb.ghcodecoverage.model.GitHubRepositoryResponse
 
 private const val GITHUB_API_BASE = "https://api.github.com"
 private const val OWNER = "productboard"
@@ -30,9 +30,9 @@ class GitHubClient(
      * Paginated API - page size can be adjusted via [REPOSITORIES_PAGE_SIZE] variable
      */
     @Throws(IllegalStateException::class)
-    fun getRepositories(): List<RepositoryResponse> {
+    fun getRepositories(): List<GitHubRepositoryResponse> {
         log.info("Retrieving repositories for owner: $OWNER.")
-        val allRepositories = mutableListOf<RepositoryResponse>()
+        val allRepositories = mutableListOf<GitHubRepositoryResponse>()
         var page = 1
         // here for PB I could simply set limit to 100, but I want to point out that I was aware of pagination, so I added this simple page-fetching with lower limit
         do {
@@ -46,7 +46,7 @@ class GitHubClient(
                 !response.isSuccessful -> throw IllegalStateException("Unable to retrieve repositories for $OWNER due to ${response.code}: ${response.message}.")
                 response.body == null -> throw IllegalStateException("Unable to retrieve repositories for $OWNER due tu null response body.")
             }
-            val repositories = jacksonObjectMapper().readValue<List<RepositoryResponse>>(response.body!!.string())
+            val repositories = jacksonObjectMapper().readValue<List<GitHubRepositoryResponse>>(response.body!!.string())
             log.info("Retrieved ${repositories.size} repositories for page: $page.")
             page++
             allRepositories.addAll(repositories)
