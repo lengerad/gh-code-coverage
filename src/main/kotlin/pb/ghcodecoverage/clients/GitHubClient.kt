@@ -2,6 +2,7 @@ package pb.ghcodecoverage.clients
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import io.github.cdimascio.dotenv.Dotenv
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.slf4j.LoggerFactory
@@ -23,6 +24,7 @@ class GitHubClient(
     val client: OkHttpClient = OkHttpClient()
 ) {
     val log = LoggerFactory.getLogger(this::class.java)
+    val token = Dotenv.load().get("GITHUB_ACCESS_TOKEN")
 
     /**
      * Fetches all repositories for owner specified in [OWNER] variable - for the sake of the task assignment I kept it as const val (as it never changes), otherwise it would be probably parameter
@@ -37,9 +39,7 @@ class GitHubClient(
         var page = 1
         // here for PB I could simply set limit to 100, but I want to point out that I was aware of pagination, so I added this simple page-fetching with lower limit
         do {
-            // TODO: REMOVE BEARER TOKEN
-//            val call = client.newCall(Request.Builder().url("$GITHUB_API_BASE/orgs/$OWNER/repos?page=$page&per_pages=$REPOSITORIES_PAGE_SIZE").header("Authorization", "Bearer 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").build())
-            val call = client.newCall(Request.Builder().url("$GITHUB_API_BASE/orgs/$OWNER/repos?page=$page&per_pages=$REPOSITORIES_PAGE_SIZE").header("Authorization", "Bearer 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").build())
+            val call = client.newCall(getBuilder("$GITHUB_API_BASE/orgs/$OWNER/repos?page=$page&per_pages=$REPOSITORIES_PAGE_SIZE", token))
             val response = call.execute()
             // example of possible error handling - ideally I would encapsulate call handling to separate method for all client requests
             // right now we interrupt the whole process in case any request fails - that could be adjusted by the needs of the API consumer to possibly store what was fetched so far
@@ -62,15 +62,19 @@ class GitHubClient(
     @Throws(IllegalStateException::class)
     fun getRepositoryLanguages(repositoryName: String): Map<String, Long> {
         log.info("Retrieving language for repository: $repositoryName by owner: $OWNER.")
-        val call =
-            // TODO: REMOVE BEARER TOKEN
-//            client.newCall(Request.Builder().url("$GITHUB_API_BASE/repos/$OWNER/$repositoryName/languages").header("Authorization", "Bearer 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").build())
-            client.newCall(Request.Builder().url("$GITHUB_API_BASE/repos/$OWNER/$repositoryName/languages").header("Authorization", "Bearer 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").build())
+        val call = client.newCall(getBuilder("$GITHUB_API_BASE/repos/$OWNER/$repositoryName/languages", token))
         val response = call.execute()
         when {
             !response.isSuccessful -> throw IllegalStateException("Unable to retrieve repository: $repositoryName languages due to ${response.code}: ${response.message}.")
             response.body == null -> throw IllegalStateException("Unable to retrieve repository: $repositoryName languages due tu null response body.")
         }
         return jacksonObjectMapper().readValue(response.body!!.string())
+    }
+
+
+    private fun getBuilder(url: String, authToken: String?): Request {
+        val builder = Request.Builder().url(url).header("User-Agent", "request")
+        if (!authToken.isNullOrEmpty()) builder.header("Authorization", "Bearer $authToken")
+        return builder.build()
     }
 }

@@ -24,14 +24,15 @@ repositories {
 }
 
 dependencies {
-	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-	implementation("org.springframework.boot:spring-boot-starter-web")
-	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+	implementation("org.springframework.boot:spring-boot-starter-data-jpa:2.7.4")
+	implementation("org.springframework.boot:spring-boot-starter-web:2.7.4")
+	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.4")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 	implementation("com.squareup.okhttp3:okhttp:4.10.0")
-	runtimeOnly("com.h2database:h2")
-	testImplementation("org.springframework.boot:spring-boot-starter-test") {
+	implementation("io.github.cdimascio:dotenv-kotlin:6.3.1")
+	runtimeOnly("com.h2database:h2:2.1.214")
+	testImplementation("org.springframework.boot:spring-boot-starter-test:2.7.4") {
 		exclude(module = "mockito-core")
 	}
 	testImplementation("com.ninja-squad:springmockk:3.1.1")

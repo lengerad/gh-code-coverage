@@ -30,6 +30,7 @@ class CodeCoverageController(
         } catch (exception: Exception) {
             // since there is only single endpoint I decided to use simple ResponseStatus for handling exceptions, otherwise I would go for @ControllerAdvice to handle it globally with more granularity
             val message = "Unable to fetch code coverage data for $date specified due to ${exception.message}"
+            log.error(message, exception)
             when (exception) {
                 is IllegalArgumentException -> throw ResponseStatusException(HttpStatus.BAD_REQUEST, message, exception);
                 else -> throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, message, exception);
